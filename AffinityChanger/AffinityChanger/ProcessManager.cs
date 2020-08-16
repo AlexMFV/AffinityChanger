@@ -1,22 +1,31 @@
-﻿using System;
+﻿using AffinityChanger.Properties;
+using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using AffinityChanger.Classes;
 
 namespace AffinityChanger
 {
     public partial class ProcessManager : Form
     {
         Timer timer = new Timer();
+        RegistryKey startReg = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
         public ProcessManager()
         {
             InitializeComponent();
+            ofdSelectedFile.Filter = "Executable Files (*.exe)|*.exe";
+
+            UpdateOptions(Cache.LoadOptions());
 
             // Load ListView with items from app cache
 
-            timer.Interval = 1000;
+            timer.Interval = 5000;
             timer.Tick += Timer_Tick;
             timer.Start();
         }
@@ -93,5 +102,81 @@ namespace AffinityChanger
 
             return path;
         }
+
+        public void UpdateOptions(AppSettings settings)
+        {
+            chkStartWindows.Checked = settings.win_start;
+            chkHideTaskbar.Checked = settings.hide_taskbar;
+            chkPromptExit.Checked = settings.prompt_exit;
+        }
+
+        #region Checkboxes Checked Change
+
+        private void chkStartWindows_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkStartWindows.Checked)
+                startReg.SetValue("AffinityChanger", Application.ExecutablePath);
+            else
+                startReg.DeleteValue("AffinityChanger");
+
+            SaveOptions();
+        }
+
+        private void chkHideTaskbar_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveOptions();
+        }
+
+        private void chkPromptExit_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveOptions();
+        }
+
+        #endregion
+
+        #region Checkboxes Events
+
+        public void SaveOptions()
+        {
+            Cache.SaveOptions(chkStartWindows.Checked.ToString(), chkHideTaskbar.Checked.ToString(),
+                chkPromptExit.Checked.ToString());
+        }
+
+        private void ProcessManager_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                if (chkHideTaskbar.Checked)
+                {
+                    Hide();
+                    trayIcon.Visible = true;
+                }
+            }
+        }
+
+        private void trayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            Show();
+            this.WindowState = FormWindowState.Normal;
+            trayIcon.Visible = false;
+        }
+
+        private void ProcessManager_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(chkPromptExit.Checked)
+            {
+                DialogResult result = MessageBox.Show("You are about to close the program, do you wish to continue?", "Window Closing", MessageBoxButtons.YesNo);
+                if(result == DialogResult.No)
+                    e.Cancel = true;
+                else
+                    e.Cancel = false;
+            }
+            else
+            {
+                e.Cancel = false;
+            }
+        }
+
+        #endregion
     }
 }
