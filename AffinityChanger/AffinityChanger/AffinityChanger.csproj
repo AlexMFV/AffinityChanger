@@ -77,6 +77,8 @@
   <ItemGroup>
     <Compile Include="Classes\AppSettings.cs" />
     <Compile Include="Classes\Cache.cs" />
+    <Compile Include="Classes\mProcess.cs" />
+    <Compile Include="Classes\mProcesses.cs" />
     <Compile Include="ProcessManager.cs">
       <SubType>Form</SubType>
     </Compile>

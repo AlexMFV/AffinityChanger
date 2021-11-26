@@ -15,6 +15,7 @@ namespace AffinityChanger
     {
         Timer timer = new Timer();
         RegistryKey startReg = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+        mProcesses procList = new mProcesses();
 
         public ProcessManager()
         {
@@ -30,7 +31,7 @@ namespace AffinityChanger
             timer.Start();
         }
 
-        private void Timer_Tick(object sender, System.EventArgs e)
+        private void Timer_Tick(object sender, EventArgs e)
         {
             foreach (ListViewItem item in lstAddedProcesses.Items) {
                 string rawPath = RemoveOkPath(item.Text); //To Remove Later
@@ -41,7 +42,7 @@ namespace AffinityChanger
             }
         }
 
-        private void btnAdd_Click(object sender, System.EventArgs e)
+        private void btnAdd_Click(object sender, EventArgs e)
         {
             timer.Stop();
             DialogResult result = ofdSelectedFile.ShowDialog();
@@ -53,6 +54,7 @@ namespace AffinityChanger
                 ListViewItem item = new ListViewItem();
                 item.Text = path;
                 lstAddedProcesses.Items.Add(item);
+                procList.Add(new mProcess(path));
             }
             
             // Save path to app cache
